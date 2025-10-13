@@ -55,10 +55,18 @@ router.post('/profile', async (req, res) => {
   const { token } = req.body;
 
   try {
+    if (!token) {
+      return res.status(400).json({ error: 'No token provided' });
+    }
+
     const profile = await spotifyRequest('/me', token);
     res.json(profile);
   } catch (error) {
-    res.status(400).json({ error: 'Failed to fetch profile' });
+    console.error('Profile fetch error:', error.response?.status, error.response?.data);
+    res.status(error.response?.status || 400).json({ 
+      error: 'Failed to fetch profile',
+      details: error.response?.data?.error?.message || error.message
+    });
   }
 });
 

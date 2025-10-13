@@ -228,15 +228,6 @@ Value: (We'll update this after Vercel, for now use)
 https://temp-vercel.vercel.app
 ```
 
-**Variable 5:**
-```
-PORT
-```
-Value:
-```
-8888
-```
-
 ### 2.4 Redeploy
 
 1. Click **Deploy** button and wait for the changes to deploy
@@ -268,13 +259,13 @@ Value:
 
 **IMPORTANT**: Change these settings before deploying!
 
-1. **Framework Preset**: `Create React App` (should auto-detect)
+1. **Framework Preset**: `Create React App` (should auto-detect but didnt for me)
 
 2. **Root Directory**: Click **"Edit"** button
-   - Type: `client`
+   - Click: `client` Checkbox
    - Click **"Continue"**
 
-3. **Build and Output Settings** (should be automatic):
+3. **Build and Output Settings** (ENABLE MANUALLY):
    - Build Command: `npm run build` ✅
    - Output Directory: `build` ✅
 
@@ -294,9 +285,7 @@ Value:
    https://spotify-transfer-app-production-xyz123.up.railway.app
    ```
    ⚠️ **Use YOUR Railway URL** from Step 2.2!
-   ⚠️ **NO `/callback` at the end this time!**
-
-4. Click **"Add"**
+   ⚠️ **NO `/callback` at the end this time!** 
 
 ### 3.4 Deploy
 
@@ -318,7 +307,7 @@ Value:
 
 3. **COPY THIS URL!**
 
-✅ **Save your Vercel URL here**: ____________________________________
+✅ **Save your Vercel URL here**: https://spotify-transfer-app-rosy.vercel.app/
 
 ---
 
@@ -331,7 +320,7 @@ Now we connect everything together with the real URLs!
 1. **Go back to Railway** → Your Project
 2. Click on your service → **"Variables"** tab
 3. Find **`CLIENT_URL`**
-4. Click the **pencil/edit icon** ✏️
+4. Click the **3 dots and click edit button** ✏️
 5. **Delete** the temp URL
 6. **Paste** your actual Vercel URL:
    ```
@@ -340,7 +329,7 @@ Now we connect everything together with the real URLs!
    ⚠️ Use YOUR actual Vercel URL from Step 3.5!
 
 7. Press **Enter** to save
-8. Railway will auto-redeploy (wait 1-2 minutes)
+8. now click deploy (wait 1-2 minutes)
 
 ✅ Railway now knows your frontend URL!
 

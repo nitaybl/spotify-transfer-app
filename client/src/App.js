@@ -7,26 +7,41 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8888';
 
 function App() {
-  const [sourceAccount, setSourceAccount] = useState(null);
-  const [targetAccount, setTargetAccount] = useState(null);
+  // Store all connected accounts
+  const [connectedAccounts, setConnectedAccounts] = useState([]);
+  const [selectedSourceId, setSelectedSourceId] = useState(null);
+  const [selectedTargetId, setSelectedTargetId] = useState(null);
   const [transferring, setTransferring] = useState(false);
   const [progress, setProgress] = useState({ step: '', percentage: 0 });
   const [complete, setComplete] = useState(false);
+  const [showSourceDropdown, setShowSourceDropdown] = useState(false);
+  const [showTargetDropdown, setShowTargetDropdown] = useState(false);
 
+  // Load saved accounts from localStorage on mount
   useEffect(() => {
-    // Check for tokens in URL after OAuth redirect
+    const saved = localStorage.getItem('spotifyAccounts');
+    if (saved) {
+      setConnectedAccounts(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save accounts to localStorage whenever they change
+  useEffect(() => {
+    if (connectedAccounts.length > 0) {
+      localStorage.setItem('spotifyAccounts', JSON.stringify(connectedAccounts));
+    }
+  }, [connectedAccounts]);
+
+  // Handle OAuth callback
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
     const error = params.get('error');
 
     if (accessToken) {
-      // Determine if this is source or target account
-      if (!sourceAccount) {
-        setSourceAccount({ accessToken, refreshToken });
-      } else if (!targetAccount) {
-        setTargetAccount({ accessToken, refreshToken });
-      }
+      // Fetch user profile to get account details
+      fetchUserProfile(accessToken, refreshToken);
       // Clean URL
       window.history.replaceState({}, document.title, '/');
     }
@@ -35,24 +50,69 @@ function App() {
       alert('Authentication failed. Please try again.');
       window.history.replaceState({}, document.title, '/');
     }
-  }, [sourceAccount, targetAccount]);
+  }, []);
 
-  const handleLogin = (accountType) => {
+  const fetchUserProfile = async (accessToken, refreshToken) => {
+    try {
+      const response = await axios.post(`${API_URL}/transfer/profile`, {
+        token: accessToken
+      });
+      
+      const profile = response.data;
+      
+      // Check if account already exists
+      const exists = connectedAccounts.find(acc => acc.id === profile.id);
+      if (exists) {
+        alert('This account is already connected!');
+        return;
+      }
+
+      // Add new account with profile data
+      const newAccount = {
+        id: profile.id,
+        displayName: profile.display_name,
+        email: profile.email,
+        product: profile.product, // premium, free, etc.
+        accessToken,
+        refreshToken,
+        addedAt: new Date().toISOString()
+      };
+
+      setConnectedAccounts(prev => [...prev, newAccount]);
+      alert(`Account "${profile.display_name}" connected successfully!`);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      alert('Failed to fetch account details. Please try again.');
+    }
+  };
+
+  const handleAddAccount = () => {
     window.location.href = `${API_URL}/auth/login`;
   };
 
-  const handleLogout = (accountType) => {
-    if (accountType === 'source') {
-      setSourceAccount(null);
-    } else {
-      setTargetAccount(null);
+  const handleRemoveAccount = (accountId) => {
+    if (window.confirm('Are you sure you want to disconnect this account?')) {
+      setConnectedAccounts(prev => prev.filter(acc => acc.id !== accountId));
+      if (selectedSourceId === accountId) setSelectedSourceId(null);
+      if (selectedTargetId === accountId) setSelectedTargetId(null);
     }
-    setComplete(false);
+  };
+
+  const getAccountById = (id) => {
+    return connectedAccounts.find(acc => acc.id === id);
   };
 
   const startTransfer = async () => {
+    const sourceAccount = getAccountById(selectedSourceId);
+    const targetAccount = getAccountById(selectedTargetId);
+
     if (!sourceAccount || !targetAccount) {
-      alert('Please connect both accounts first!');
+      alert('Please select both source and target accounts!');
+      return;
+    }
+
+    if (selectedSourceId === selectedTargetId) {
+      alert('Source and target accounts must be different!');
       return;
     }
 
@@ -158,7 +218,7 @@ function App() {
         </motion.div>
 
         <div className="accounts-section">
-          {/* Source Account */}
+          {/* Source Account Selector */}
           <motion.div
             initial={{ opacity: 0, x: -100 }}
             animate={{ opacity: 1, x: 0 }}
@@ -169,20 +229,82 @@ function App() {
               <h2>Source Account</h2>
               <span className="badge">From</span>
             </div>
-            {sourceAccount ? (
-              <div className="account-info">
-                <div className="status-indicator connected"></div>
-                <p className="status-text">✓ Connected</p>
-                <button onClick={() => handleLogout('source')} className="btn btn-secondary">
-                  Disconnect
+            
+            <div className="account-selector">
+              <div className="dropdown-container">
+                <button 
+                  className="dropdown-trigger btn btn-primary"
+                  onClick={() => setShowSourceDropdown(!showSourceDropdown)}
+                >
+                  {selectedSourceId ? (
+                    <>
+                      <span className="btn-icon">👤</span>
+                      {getAccountById(selectedSourceId)?.displayName}
+                    </>
+                  ) : (
+                    <>
+                      <span className="btn-icon">♪</span>
+                      Select Account
+                    </>
+                  )}
+                  <span className="dropdown-arrow">▼</span>
                 </button>
+
+                <AnimatePresence>
+                  {showSourceDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="dropdown-menu glass"
+                    >
+                      {connectedAccounts.map(account => (
+                        <div 
+                          key={account.id}
+                          className={`dropdown-item ${selectedSourceId === account.id ? 'selected' : ''}`}
+                          onClick={() => {
+                            setSelectedSourceId(account.id);
+                            setShowSourceDropdown(false);
+                          }}
+                        >
+                          <div className="account-item-info">
+                            <span className="account-name">{account.displayName}</span>
+                            {account.product === 'premium' && (
+                              <span className="premium-pill">Premium</span>
+                            )}
+                            {account.product === 'free' && (
+                              <span className="free-pill">Free</span>
+                            )}
+                          </div>
+                          <button
+                            className="remove-account-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveAccount(account.id);
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      
+                      <div className="dropdown-divider"></div>
+                      
+                      <div 
+                        className="dropdown-item add-account"
+                        onClick={() => {
+                          handleAddAccount();
+                          setShowSourceDropdown(false);
+                        }}
+                      >
+                        <span className="btn-icon">+</span>
+                        Add Account
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            ) : (
-              <button onClick={() => handleLogin('source')} className="btn btn-primary">
-                <span className="btn-icon">♪</span>
-                Connect Spotify
-              </button>
-            )}
+            </div>
           </motion.div>
 
           {/* Transfer Arrow */}
@@ -195,7 +317,7 @@ function App() {
             →
           </motion.div>
 
-          {/* Target Account */}
+          {/* Target Account Selector */}
           <motion.div
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
@@ -206,30 +328,88 @@ function App() {
               <h2>Target Account</h2>
               <span className="badge badge-target">To</span>
             </div>
-            {targetAccount ? (
-              <div className="account-info">
-                <div className="status-indicator connected"></div>
-                <p className="status-text">✓ Connected</p>
-                <button onClick={() => handleLogout('target')} className="btn btn-secondary">
-                  Disconnect
+            
+            <div className="account-selector">
+              <div className="dropdown-container">
+                <button 
+                  className="dropdown-trigger btn btn-primary"
+                  onClick={() => setShowTargetDropdown(!showTargetDropdown)}
+                >
+                  {selectedTargetId ? (
+                    <>
+                      <span className="btn-icon">👤</span>
+                      {getAccountById(selectedTargetId)?.displayName}
+                    </>
+                  ) : (
+                    <>
+                      <span className="btn-icon">♪</span>
+                      Select Account
+                    </>
+                  )}
+                  <span className="dropdown-arrow">▼</span>
                 </button>
+
+                <AnimatePresence>
+                  {showTargetDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="dropdown-menu glass"
+                    >
+                      {connectedAccounts.map(account => (
+                        <div 
+                          key={account.id}
+                          className={`dropdown-item ${selectedTargetId === account.id ? 'selected' : ''}`}
+                          onClick={() => {
+                            setSelectedTargetId(account.id);
+                            setShowTargetDropdown(false);
+                          }}
+                        >
+                          <div className="account-item-info">
+                            <span className="account-name">{account.displayName}</span>
+                            {account.product === 'premium' && (
+                              <span className="premium-pill">Premium</span>
+                            )}
+                            {account.product === 'free' && (
+                              <span className="free-pill">Free</span>
+                            )}
+                          </div>
+                          <button
+                            className="remove-account-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveAccount(account.id);
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      
+                      <div className="dropdown-divider"></div>
+                      
+                      <div 
+                        className="dropdown-item add-account"
+                        onClick={() => {
+                          handleAddAccount();
+                          setShowTargetDropdown(false);
+                        }}
+                      >
+                        <span className="btn-icon">+</span>
+                        Add Account
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            ) : (
-              <button 
-                onClick={() => handleLogin('target')} 
-                className="btn btn-primary"
-                disabled={!sourceAccount}
-              >
-                <span className="btn-icon">♪</span>
-                Connect Spotify
-              </button>
-            )}
+            </div>
           </motion.div>
         </div>
 
         {/* Transfer Button */}
         <AnimatePresence>
-          {sourceAccount && targetAccount && !transferring && (
+          {selectedSourceId && selectedTargetId && !transferring && !complete && (
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
@@ -282,13 +462,13 @@ function App() {
               <p>Your music library has been successfully transferred</p>
               <button 
                 onClick={() => {
-                  setSourceAccount(null);
-                  setTargetAccount(null);
+                  setSelectedSourceId(null);
+                  setSelectedTargetId(null);
                   setComplete(false);
                 }} 
                 className="btn btn-primary"
               >
-                Transfer Another Account
+                Transfer Again
               </button>
             </motion.div>
           )}

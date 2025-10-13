@@ -63,11 +63,13 @@ We'll deploy in this order:
 
    **Redirect URIs:** (IMPORTANT!)
    ```
-   http://localhost:8888/callback
+   http://127.0.0.1:8888/callback
    ```
-   ⚠️ Type this EXACTLY as shown, then click **"Add"**
+   ⚠️ Type this EXACTLY as shown (use `127.0.0.1` NOT `localhost`), then click **"Add"**
    
    You should see it appear in the list below
+   
+   📝 **Note**: Spotify requires `127.0.0.1` for local development (not `localhost`)
 
    **Which API/SDKs are you planning to use?**
    - Check the box for: ✅ **Web API**
@@ -105,7 +107,7 @@ You should now have:
 - ✅ Spotify Developer App created
 - ✅ Client ID (copied and saved)
 - ✅ Client Secret (copied and saved)
-- ✅ Redirect URI added: `http://localhost:8888/callback`
+- ✅ Redirect URI added: `http://127.0.0.1:8888/callback`
 - ✅ Web API selected
 
 **Leave this browser tab open** - you'll add another redirect URI later!
@@ -182,7 +184,7 @@ git push -u origin main
 https://spotify-transfer-app-production-xyz123.up.railway.app
 ```
 
-✅ **Save your Railway URL here**: ____________________________________
+✅ **Save your Railway URL here**: spotify-transfer-app-production.up.railway.app
 
 ### 2.3 Add Environment Variables
 
@@ -237,14 +239,12 @@ Value:
 
 ### 2.4 Redeploy
 
-1. Click **"Deployments"** tab
-2. Click the **"⋯"** (three dots) on the latest deployment
-3. Click **"Redeploy"**
-4. Wait 2-3 minutes for deployment to complete
+1. Click **Deploy** button and wait for the changes to deploy
+2. it will say building and deploying for about ~60 seconds
 
 ### 2.5 Verify Deployment
 
-1. Status should show **"SUCCESS"** with green checkmark ✅
+1. Status should show **"x minutes/seconds ago via github"** with green checkmark ✅
 2. Click on your Railway domain URL
 3. You should see:
    ```json
@@ -366,8 +366,8 @@ You should see:
 
 8. Click **"Add"**
 9. You should now see TWO redirect URIs:
-   - `http://localhost:8888/callback`
-   - `https://your-railway-url.railway.app/callback`
+   - `http://127.0.0.1:8888/callback` (for local testing)
+   - `https://your-railway-url.railway.app/callback` (for production)
 
 10. Scroll to bottom and click **"Save"**
 11. **Wait 2-3 minutes** for Spotify to update
@@ -677,7 +677,7 @@ Client ID: [your client id]
 Client Secret: [your client secret]
 
 Redirect URIs:
-  ✅ http://localhost:8888/callback
+  ✅ http://127.0.0.1:8888/callback
   ✅ https://your-railway-url.railway.app/callback
 
 API/SDKs:
@@ -783,7 +783,7 @@ Use this to verify everything is set up:
 - [ ] App created at developer.spotify.com/dashboard
 - [ ] Client ID copied and saved
 - [ ] Client Secret copied and saved
-- [ ] Redirect URI added: `http://localhost:8888/callback`
+- [ ] Redirect URI added: `http://127.0.0.1:8888/callback`
 - [ ] Redirect URI added: `https://your-railway-url.railway.app/callback`
 - [ ] Web API selected
 

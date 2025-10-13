@@ -235,5 +235,129 @@ router.post('/transfer-followed-artists', async (req, res) => {
   }
 });
 
+// ===== DELETION ENDPOINTS (Easter Egg Feature) =====
+
+// Delete all liked songs
+router.post('/delete-liked-songs', async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    // Get all liked songs
+    const tracks = await getAllItems('/me/tracks?limit=50', token);
+    
+    if (tracks.length === 0) {
+      return res.json({ success: true, deleted: 0 });
+    }
+
+    // Delete in batches of 50
+    const batchSize = 50;
+    let deleted = 0;
+
+    for (let i = 0; i < tracks.length; i += batchSize) {
+      const batch = tracks.slice(i, i + batchSize);
+      const trackIds = batch.map(item => item.track.id);
+      
+      await spotifyRequest(
+        `/me/tracks?ids=${trackIds.join(',')}`,
+        token,
+        'DELETE'
+      );
+      deleted += trackIds.length;
+    }
+
+    res.json({ success: true, deleted });
+  } catch (error) {
+    console.error('Delete liked songs error:', error.response?.data || error.message);
+    res.status(400).json({ error: 'Failed to delete liked songs' });
+  }
+});
+
+// Delete all playlists (only user-owned playlists)
+router.post('/delete-playlists', async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    // Get all playlists
+    const playlists = await getAllItems('/me/playlists?limit=50', token);
+    
+    // Get user profile to check ownership
+    const profile = await spotifyRequest('/me', token);
+    
+    let deleted = 0;
+
+    for (const playlist of playlists) {
+      // Only delete playlists owned by the user (not followed playlists)
+      if (playlist.owner.id === profile.id) {
+        try {
+          await spotifyRequest(
+            `/playlists/${playlist.id}/followers`,
+            token,
+            'DELETE'
+          );
+          deleted++;
+        } catch (error) {
+          console.error(`Failed to delete playlist ${playlist.id}:`, error.message);
+          // Continue deleting other playlists even if one fails
+        }
+      }
+    }
+
+    res.json({ success: true, deleted });
+  } catch (error) {
+    console.error('Delete playlists error:', error.response?.data || error.message);
+    res.status(400).json({ error: 'Failed to delete playlists' });
+  }
+});
+
+// Unfollow all artists
+router.post('/delete-followed-artists', async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    // Get all followed artists
+    let allArtists = [];
+    let after = null;
+
+    while (true) {
+      const endpoint = after 
+        ? `/me/following?type=artist&limit=50&after=${after}`
+        : '/me/following?type=artist&limit=50';
+      
+      const response = await spotifyRequest(endpoint, token);
+      
+      allArtists = allArtists.concat(response.artists.items);
+      
+      if (!response.artists.next) break;
+      after = response.artists.cursors?.after;
+      if (!after) break;
+    }
+
+    if (allArtists.length === 0) {
+      return res.json({ success: true, deleted: 0 });
+    }
+
+    // Unfollow in batches of 50
+    const batchSize = 50;
+    let deleted = 0;
+
+    for (let i = 0; i < allArtists.length; i += batchSize) {
+      const batch = allArtists.slice(i, i + batchSize);
+      const artistIds = batch.map(artist => artist.id);
+      
+      await spotifyRequest(
+        `/me/following?type=artist&ids=${artistIds.join(',')}`,
+        token,
+        'DELETE'
+      );
+      deleted += artistIds.length;
+    }
+
+    res.json({ success: true, deleted });
+  } catch (error) {
+    console.error('Delete followed artists error:', error.response?.data || error.message);
+    res.status(400).json({ error: 'Failed to unfollow artists' });
+  }
+});
+
 module.exports = router;
 

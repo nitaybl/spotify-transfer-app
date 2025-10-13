@@ -766,6 +766,206 @@
   background: rgba(124, 58, 237, 0.7);
 }
 
+/* Deletion Modal (Easter Egg) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 40px;
+}
+
+.modal-header h2 {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  color: var(--color-text);
+}
+
+.modal-subtitle {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  margin-bottom: 30px;
+}
+
+.modal-body {
+  margin-bottom: 30px;
+}
+
+.warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 16px;
+  margin-bottom: 30px;
+}
+
+.warning-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.warning-box strong {
+  display: block;
+  color: #ef4444;
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+}
+
+.warning-box p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.account-select-section {
+  margin-top: 24px;
+}
+
+.modal-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 16px;
+}
+
+.delete-accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.delete-account-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  cursor: pointer;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.delete-account-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.delete-account-card.selected {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+.account-avatar-modal {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.account-avatar-placeholder-modal {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  border: 2px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.delete-account-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.delete-account-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.delete-account-email {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(239, 68, 68, 0.6);
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deletion-progress {
+  padding: 40px;
+  text-align: center;
+}
+
+.deletion-progress h3 {
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+  color: #ef4444;
+}
+
+/* Modal scrollbar */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(239, 68, 68, 0.5);
+  border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(239, 68, 68, 0.7);
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .accounts-section {

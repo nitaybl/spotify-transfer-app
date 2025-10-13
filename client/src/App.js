@@ -18,6 +18,10 @@ function App() {
   const [showTargetDropdown, setShowTargetDropdown] = useState(false);
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [preserveOrder, setPreserveOrder] = useState(true); // Default to preserve order
+  const [checkboxClicks, setCheckboxClicks] = useState([]);
+  const [showDeletionModal, setShowDeletionModal] = useState(false);
+  const [selectedDeleteAccountId, setSelectedDeleteAccountId] = useState(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Load saved accounts from localStorage on mount
   useEffect(() => {
@@ -133,6 +137,62 @@ function App() {
 
   const getAccountById = (id) => {
     return connectedAccounts.find(acc => acc.id === id);
+  };
+
+  // Easter egg: Detect rapid checkbox clicks
+  const handleCheckboxClick = () => {
+    const now = Date.now();
+    const recentClicks = [...checkboxClicks, now].filter(time => now - time < 2000); // Last 2 seconds
+    setCheckboxClicks(recentClicks);
+    
+    // If 10+ clicks in 2 seconds, show deletion modal
+    if (recentClicks.length >= 10) {
+      setShowDeletionModal(true);
+      setCheckboxClicks([]); // Reset
+    }
+  };
+
+  // Delete all data from an account
+  const deleteAccountData = async (accountId) => {
+    const account = getAccountById(accountId);
+    if (!account) return;
+
+    setIsDeletingAccount(true);
+    
+    try {
+      // Delete liked songs
+      setProgress({ step: 'Deleting liked songs...', percentage: 10 });
+      await axios.post(`${API_URL}/transfer/delete-liked-songs`, {
+        token: account.accessToken
+      });
+
+      // Delete playlists
+      setProgress({ step: 'Deleting playlists...', percentage: 40 });
+      await axios.post(`${API_URL}/transfer/delete-playlists`, {
+        token: account.accessToken
+      });
+
+      // Unfollow artists
+      setProgress({ step: 'Unfollowing artists...', percentage: 70 });
+      await axios.post(`${API_URL}/transfer/delete-followed-artists`, {
+        token: account.accessToken
+      });
+
+      setProgress({ step: 'Account data deleted! 🗑️', percentage: 100 });
+      
+      setTimeout(() => {
+        setShowDeletionModal(false);
+        setSelectedDeleteAccountId(null);
+        setIsDeletingAccount(false);
+        setProgress({ step: '', percentage: 0 });
+        alert('✅ All data has been deleted from this Spotify account!');
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Deletion error:', error);
+      alert('An error occurred during deletion. Please try again.');
+      setIsDeletingAccount(false);
+    }
   };
 
   const startTransfer = async () => {
@@ -508,6 +568,7 @@ function App() {
                     type="checkbox" 
                     checked={preserveOrder}
                     onChange={(e) => setPreserveOrder(e.target.checked)}
+                    onClick={handleCheckboxClick}
                     className="checkbox-input"
                   />
                   <span className="checkbox-custom"></span>
@@ -613,6 +674,113 @@ function App() {
             </motion.div>
           </div>
         </motion.div>
+      </div>
+
+        {/* Deletion Modal (Easter Egg) */}
+        <AnimatePresence>
+          {showDeletionModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="modal-overlay"
+              onClick={() => !isDeletingAccount && setShowDeletionModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="modal-content glass"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {!isDeletingAccount ? (
+                  <>
+                    <div className="modal-header">
+                      <h2>🗑️ Delete Account Data</h2>
+                      <p className="modal-subtitle">Permanently remove all data from a Spotify account</p>
+                    </div>
+
+                    <div className="modal-body">
+                      <div className="warning-box glass">
+                        <span className="warning-icon">⚠️</span>
+                        <div>
+                          <strong>Warning: This action cannot be undone!</strong>
+                          <p>This will delete ALL liked songs, playlists, and followed artists from the selected account.</p>
+                        </div>
+                      </div>
+
+                      <div className="account-select-section">
+                        <label className="modal-label">Select account to delete data from:</label>
+                        <div className="delete-accounts-list">
+                          {connectedAccounts.map(account => (
+                            <div
+                              key={account.id}
+                              className={`delete-account-card glass ${selectedDeleteAccountId === account.id ? 'selected' : ''}`}
+                              onClick={() => setSelectedDeleteAccountId(account.id)}
+                            >
+                              {account.image ? (
+                                <img src={account.image} alt={account.displayName} className="account-avatar-modal" />
+                              ) : (
+                                <div className="account-avatar-placeholder-modal">👤</div>
+                              )}
+                              <div className="delete-account-info">
+                                <span className="delete-account-name">{account.displayName}</span>
+                                <span className="delete-account-email">{account.email}</span>
+                              </div>
+                              {account.product === 'premium' && <span className="premium-pill">Premium</span>}
+                              {account.product === 'free' && <span className="free-pill">Free</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="modal-footer">
+                      <button 
+                        className="btn btn-secondary" 
+                        onClick={() => setShowDeletionModal(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        className="btn btn-danger" 
+                        onClick={() => {
+                          if (!selectedDeleteAccountId) {
+                            alert('Please select an account first!');
+                            return;
+                          }
+                          const account = getAccountById(selectedDeleteAccountId);
+                          if (window.confirm(`⚠️ ARE YOU ABSOLUTELY SURE?\n\nThis will PERMANENTLY DELETE all data from:\n\n${account.displayName} (${account.email})\n\nIncluding:\n• All liked songs\n• All playlists\n• All followed artists\n\nThis CANNOT be undone!\n\nType "DELETE" in the next prompt to confirm.`)) {
+                            const confirmation = prompt('Type "DELETE" to confirm:');
+                            if (confirmation === 'DELETE') {
+                              deleteAccountData(selectedDeleteAccountId);
+                            }
+                          }
+                        }}
+                        disabled={!selectedDeleteAccountId}
+                      >
+                        🗑️ Delete All Data
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="deletion-progress">
+                    <h3>{progress.step}</h3>
+                    <div className="progress-bar">
+                      <motion.div
+                        className="progress-fill"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress.percentage}%` }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </div>
+                    <p className="progress-text">{progress.percentage}%</p>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Footer */}

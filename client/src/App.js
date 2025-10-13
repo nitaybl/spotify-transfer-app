@@ -676,112 +676,111 @@ function App() {
         </motion.div>
       </div>
 
-        {/* Deletion Modal (Easter Egg) */}
-        <AnimatePresence>
-          {showDeletionModal && (
+      {/* Deletion Modal (Easter Egg) */}
+      <AnimatePresence>
+        {showDeletionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-overlay"
+            onClick={() => !isDeletingAccount && setShowDeletionModal(false)}
+          >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="modal-overlay"
-              onClick={() => !isDeletingAccount && setShowDeletionModal(false)}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="modal-content glass"
+              onClick={(e) => e.stopPropagation()}
             >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="modal-content glass"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {!isDeletingAccount ? (
-                  <>
-                    <div className="modal-header">
-                      <h2>🗑️ Delete Account Data</h2>
-                      <p className="modal-subtitle">Permanently remove all data from a Spotify account</p>
-                    </div>
-
-                    <div className="modal-body">
-                      <div className="warning-box glass">
-                        <span className="warning-icon">⚠️</span>
-                        <div>
-                          <strong>Warning: This action cannot be undone!</strong>
-                          <p>This will delete ALL liked songs, playlists, and followed artists from the selected account.</p>
-                        </div>
-                      </div>
-
-                      <div className="account-select-section">
-                        <label className="modal-label">Select account to delete data from:</label>
-                        <div className="delete-accounts-list">
-                          {connectedAccounts.map(account => (
-                            <div
-                              key={account.id}
-                              className={`delete-account-card glass ${selectedDeleteAccountId === account.id ? 'selected' : ''}`}
-                              onClick={() => setSelectedDeleteAccountId(account.id)}
-                            >
-                              {account.image ? (
-                                <img src={account.image} alt={account.displayName} className="account-avatar-modal" />
-                              ) : (
-                                <div className="account-avatar-placeholder-modal">👤</div>
-                              )}
-                              <div className="delete-account-info">
-                                <span className="delete-account-name">{account.displayName}</span>
-                                <span className="delete-account-email">{account.email}</span>
-                              </div>
-                              {account.product === 'premium' && <span className="premium-pill">Premium</span>}
-                              {account.product === 'free' && <span className="free-pill">Free</span>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="modal-footer">
-                      <button 
-                        className="btn btn-secondary" 
-                        onClick={() => setShowDeletionModal(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        className="btn btn-danger" 
-                        onClick={() => {
-                          if (!selectedDeleteAccountId) {
-                            alert('Please select an account first!');
-                            return;
-                          }
-                          const account = getAccountById(selectedDeleteAccountId);
-                          if (window.confirm(`⚠️ ARE YOU ABSOLUTELY SURE?\n\nThis will PERMANENTLY DELETE all data from:\n\n${account.displayName} (${account.email})\n\nIncluding:\n• All liked songs\n• All playlists\n• All followed artists\n\nThis CANNOT be undone!\n\nType "DELETE" in the next prompt to confirm.`)) {
-                            const confirmation = prompt('Type "DELETE" to confirm:');
-                            if (confirmation === 'DELETE') {
-                              deleteAccountData(selectedDeleteAccountId);
-                            }
-                          }
-                        }}
-                        disabled={!selectedDeleteAccountId}
-                      >
-                        🗑️ Delete All Data
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="deletion-progress">
-                    <h3>{progress.step}</h3>
-                    <div className="progress-bar">
-                      <motion.div
-                        className="progress-fill"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress.percentage}%` }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    </div>
-                    <p className="progress-text">{progress.percentage}%</p>
+              {!isDeletingAccount ? (
+                <>
+                  <div className="modal-header">
+                    <h2>🗑️ Delete Account Data</h2>
+                    <p className="modal-subtitle">Permanently remove all data from a Spotify account</p>
                   </div>
-                )}
-              </motion.div>
+
+                  <div className="modal-body">
+                    <div className="warning-box glass">
+                      <span className="warning-icon">⚠️</span>
+                      <div>
+                        <strong>Warning: This action cannot be undone!</strong>
+                        <p>This will delete ALL liked songs, playlists, and followed artists from the selected account.</p>
+                      </div>
+                    </div>
+
+                    <div className="account-select-section">
+                      <label className="modal-label">Select account to delete data from:</label>
+                      <div className="delete-accounts-list">
+                        {connectedAccounts.map(account => (
+                          <div
+                            key={account.id}
+                            className={`delete-account-card glass ${selectedDeleteAccountId === account.id ? 'selected' : ''}`}
+                            onClick={() => setSelectedDeleteAccountId(account.id)}
+                          >
+                            {account.image ? (
+                              <img src={account.image} alt={account.displayName} className="account-avatar-modal" />
+                            ) : (
+                              <div className="account-avatar-placeholder-modal">👤</div>
+                            )}
+                            <div className="delete-account-info">
+                              <span className="delete-account-name">{account.displayName}</span>
+                              <span className="delete-account-email">{account.email}</span>
+                            </div>
+                            {account.product === 'premium' && <span className="premium-pill">Premium</span>}
+                            {account.product === 'free' && <span className="free-pill">Free</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button 
+                      className="btn btn-secondary" 
+                      onClick={() => setShowDeletionModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="btn btn-danger" 
+                      onClick={() => {
+                        if (!selectedDeleteAccountId) {
+                          alert('Please select an account first!');
+                          return;
+                        }
+                        const account = getAccountById(selectedDeleteAccountId);
+                        if (window.confirm(`⚠️ ARE YOU ABSOLUTELY SURE?\n\nThis will PERMANENTLY DELETE all data from:\n\n${account.displayName} (${account.email})\n\nIncluding:\n• All liked songs\n• All playlists\n• All followed artists\n\nThis CANNOT be undone!\n\nType "DELETE" in the next prompt to confirm.`)) {
+                          const confirmation = prompt('Type "DELETE" to confirm:');
+                          if (confirmation === 'DELETE') {
+                            deleteAccountData(selectedDeleteAccountId);
+                          }
+                        }
+                      }}
+                      disabled={!selectedDeleteAccountId}
+                    >
+                      🗑️ Delete All Data
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="deletion-progress">
+                  <h3>{progress.step}</h3>
+                  <div className="progress-bar">
+                    <motion.div
+                      className="progress-fill"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress.percentage}%` }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+                  <p className="progress-text">{progress.percentage}%</p>
+                </div>
+              )}
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Footer */}
       <footer className="footer">

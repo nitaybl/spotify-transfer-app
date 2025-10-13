@@ -17,6 +17,7 @@ function App() {
   const [showSourceDropdown, setShowSourceDropdown] = useState(false);
   const [showTargetDropdown, setShowTargetDropdown] = useState(false);
   const [isAddingAccount, setIsAddingAccount] = useState(false);
+  const [preserveOrder, setPreserveOrder] = useState(true); // Default to preserve order
 
   // Load saved accounts from localStorage on mount
   useEffect(() => {
@@ -80,6 +81,7 @@ function App() {
         displayName: profile.display_name,
         email: profile.email,
         product: profile.product, // premium, free, etc.
+        image: profile.images && profile.images.length > 0 ? profile.images[0].url : null,
         accessToken,
         refreshToken,
         addedAt: new Date().toISOString()
@@ -172,7 +174,13 @@ function App() {
       // Transfer liked songs
       if (likedTracks.length > 0) {
         setProgress({ step: `Transferring ${likedTracks.length} liked songs...`, percentage: 35 });
-        const trackIds = likedTracks.map(item => item.track.id);
+        let trackIds = likedTracks.map(item => item.track.id);
+        
+        // If preserve order is enabled, reverse the array so newest songs stay on top
+        if (preserveOrder) {
+          trackIds = trackIds.reverse();
+        }
+        
         await axios.post(`${API_URL}/transfer/transfer-liked-songs`, {
           targetToken: targetAccount.accessToken,
           trackIds
@@ -240,11 +248,12 @@ function App() {
           transition={{ duration: 0.8 }}
           className="header"
         >
-          <h1 className="title">
-            <span className="gradient-text">Spotify</span> Account Transfer
-          </h1>
+          <div className="logo">
+            <span className="logo-icon">🎵</span>
+            <h1 className="logo-text">TuneShift</h1>
+          </div>
           <p className="subtitle">
-            Seamlessly transfer your liked songs, playlists, and followed artists between accounts
+            Seamlessly transfer your liked songs, playlists, and followed artists between Spotify accounts
           </p>
           
           {isAddingAccount && (
@@ -280,7 +289,15 @@ function App() {
                 >
                   {selectedSourceId ? (
                     <>
-                      <span className="btn-icon">👤</span>
+                      {getAccountById(selectedSourceId)?.image ? (
+                        <img 
+                          src={getAccountById(selectedSourceId).image} 
+                          alt="Profile" 
+                          className="account-avatar"
+                        />
+                      ) : (
+                        <span className="btn-icon">👤</span>
+                      )}
                       {getAccountById(selectedSourceId)?.displayName}
                     </>
                   ) : (
@@ -310,6 +327,15 @@ function App() {
                           }}
                         >
                           <div className="account-item-info">
+                            {account.image ? (
+                              <img 
+                                src={account.image} 
+                                alt={account.displayName} 
+                                className="account-avatar-dropdown"
+                              />
+                            ) : (
+                              <div className="account-avatar-placeholder">👤</div>
+                            )}
                             <span className="account-name">{account.displayName}</span>
                             {account.product === 'premium' && (
                               <span className="premium-pill">Premium</span>
@@ -379,7 +405,15 @@ function App() {
                 >
                   {selectedTargetId ? (
                     <>
-                      <span className="btn-icon">👤</span>
+                      {getAccountById(selectedTargetId)?.image ? (
+                        <img 
+                          src={getAccountById(selectedTargetId).image} 
+                          alt="Profile" 
+                          className="account-avatar"
+                        />
+                      ) : (
+                        <span className="btn-icon">👤</span>
+                      )}
                       {getAccountById(selectedTargetId)?.displayName}
                     </>
                   ) : (
@@ -409,6 +443,15 @@ function App() {
                           }}
                         >
                           <div className="account-item-info">
+                            {account.image ? (
+                              <img 
+                                src={account.image} 
+                                alt={account.displayName} 
+                                className="account-avatar-dropdown"
+                              />
+                            ) : (
+                              <div className="account-avatar-placeholder">👤</div>
+                            )}
                             <span className="account-name">{account.displayName}</span>
                             {account.product === 'premium' && (
                               <span className="premium-pill">Premium</span>
@@ -449,7 +492,7 @@ function App() {
           </motion.div>
         </div>
 
-        {/* Transfer Button */}
+        {/* Transfer Options & Button */}
         <AnimatePresence>
           {selectedSourceId && selectedTargetId && !transferring && !complete && (
             <motion.div
@@ -459,6 +502,22 @@ function App() {
               transition={{ duration: 0.5 }}
               className="transfer-section"
             >
+              <div className="transfer-options glass">
+                <label className="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    checked={preserveOrder}
+                    onChange={(e) => setPreserveOrder(e.target.checked)}
+                    className="checkbox-input"
+                  />
+                  <span className="checkbox-custom"></span>
+                  <span className="checkbox-text">
+                    <strong>Preserve song order</strong>
+                    <span className="checkbox-description">Keep newest songs at the top (recommended)</span>
+                  </span>
+                </label>
+              </div>
+              
               <button onClick={startTransfer} className="btn btn-transfer glass">
                 <span className="btn-icon">⚡</span>
                 Start Transfer

@@ -93,6 +93,40 @@
   margin-bottom: 60px;
 }
 
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.logo-icon {
+  font-size: 4rem;
+  animation: float-icon 3s ease-in-out infinite;
+}
+
+@keyframes float-icon {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+.logo-text {
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -2px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
 .title {
   font-size: 3.5rem;
   font-weight: 800;
@@ -110,7 +144,7 @@
 .subtitle {
   font-size: 1.25rem;
   color: var(--color-text-muted);
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
   line-height: 1.6;
 }
@@ -281,8 +315,85 @@
 /* Transfer Section */
 .transfer-section {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
   margin: 60px 0;
+}
+
+/* Transfer Options */
+.transfer-options {
+  padding: 24px 32px;
+  max-width: 500px;
+  width: 100%;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-custom {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--glass-border);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  margin-top: 2px;
+}
+
+.checkbox-input:checked ~ .checkbox-custom {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-success));
+  border-color: var(--color-accent);
+}
+
+.checkbox-custom::after {
+  content: '';
+  position: absolute;
+  display: none;
+  left: 7px;
+  top: 3px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-input:checked ~ .checkbox-custom::after {
+  display: block;
+}
+
+.checkbox-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checkbox-text strong {
+  font-size: 1rem;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.checkbox-description {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  font-weight: 400;
 }
 
 /* Progress Card */
@@ -557,6 +668,39 @@
   color: var(--color-text);
 }
 
+/* Profile Pictures / Avatars */
+.account-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--glass-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.account-avatar-dropdown {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--glass-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.account-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  border: 2px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
 /* Premium/Free Pills */
 .premium-pill,
 .free-pill {
@@ -636,6 +780,14 @@
   .title {
     font-size: 2.5rem;
   }
+  
+  .logo-text {
+    font-size: 2.5rem;
+  }
+  
+  .logo-icon {
+    font-size: 3rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -645,6 +797,18 @@
 
   .title {
     font-size: 2rem;
+  }
+  
+  .logo {
+    gap: 12px;
+  }
+  
+  .logo-text {
+    font-size: 2rem;
+  }
+  
+  .logo-icon {
+    font-size: 2.5rem;
   }
 
   .subtitle {

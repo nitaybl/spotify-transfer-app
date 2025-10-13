@@ -102,8 +102,18 @@ function App() {
       setIsAddingAccount(false);
       
       // More detailed error message
-      const errorMsg = error.response?.data?.error || error.message || 'Unknown error';
-      alert(`Failed to fetch account details.\n\nError: ${errorMsg}\n\nPlease try:\n1. Logging out of Spotify completely\n2. Then try connecting again`);
+      const errorMsg = error.response?.data?.details || error.response?.data?.error || error.message || 'Unknown error';
+      const statusCode = error.response?.status;
+      
+      let helpText = 'Please try:\n1. Logging out of Spotify completely\n2. Clear your browser cache\n3. Try connecting again';
+      
+      if (statusCode === 401) {
+        helpText = 'Your session expired. Please:\n1. Log out of Spotify\n2. Try connecting again';
+      } else if (statusCode === 403) {
+        helpText = 'Permission denied. Please:\n1. Make sure you authorized all permissions\n2. Try connecting again';
+      }
+      
+      alert(`Failed to fetch account details.\n\nError (${statusCode || 'Network'}): ${errorMsg}\n\n${helpText}`);
     }
   };
 

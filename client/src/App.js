@@ -16,6 +16,7 @@ function App() {
   const [complete, setComplete] = useState(false);
   const [showSourceDropdown, setShowSourceDropdown] = useState(false);
   const [showTargetDropdown, setShowTargetDropdown] = useState(false);
+  const [isAddingAccount, setIsAddingAccount] = useState(false);
 
   // Load saved accounts from localStorage on mount
   useEffect(() => {
@@ -40,6 +41,7 @@ function App() {
     const error = params.get('error');
 
     if (accessToken) {
+      setIsAddingAccount(true);
       // Fetch user profile to get account details
       fetchUserProfile(accessToken, refreshToken);
       // Clean URL
@@ -49,11 +51,15 @@ function App() {
     if (error) {
       alert('Authentication failed. Please try again.');
       window.history.replaceState({}, document.title, '/');
+      setIsAddingAccount(false);
     }
   }, []);
 
   const fetchUserProfile = async (accessToken, refreshToken) => {
     try {
+      // Add a small delay to ensure backend is ready
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const response = await axios.post(`${API_URL}/transfer/profile`, {
         token: accessToken
       });
@@ -64,6 +70,7 @@ function App() {
       const exists = connectedAccounts.find(acc => acc.id === profile.id);
       if (exists) {
         alert('This account is already connected!');
+        setIsAddingAccount(false);
         return;
       }
 
@@ -79,10 +86,24 @@ function App() {
       };
 
       setConnectedAccounts(prev => [...prev, newAccount]);
-      alert(`Account "${profile.display_name}" connected successfully!`);
+      setIsAddingAccount(false);
+      
+      // Show success notification
+      const notification = document.createElement('div');
+      notification.className = 'success-notification';
+      notification.textContent = `✓ Account "${profile.display_name}" connected!`;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 3000);
+      
     } catch (error) {
       console.error('Error fetching profile:', error);
-      alert('Failed to fetch account details. Please try again.');
+      console.error('Error details:', error.response?.data);
+      
+      setIsAddingAccount(false);
+      
+      // More detailed error message
+      const errorMsg = error.response?.data?.error || error.message || 'Unknown error';
+      alert(`Failed to fetch account details.\n\nError: ${errorMsg}\n\nPlease try:\n1. Logging out of Spotify completely\n2. Then try connecting again`);
     }
   };
 
@@ -215,6 +236,17 @@ function App() {
           <p className="subtitle">
             Seamlessly transfer your liked songs, playlists, and followed artists between accounts
           </p>
+          
+          {isAddingAccount && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="loading-notification glass"
+            >
+              <div className="spinner"></div>
+              <span>Adding account...</span>
+            </motion.div>
+          )}
         </motion.div>
 
         <div className="accounts-section">

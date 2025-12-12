@@ -4,6 +4,9 @@ const router = express.Router();
 
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
 
+// Helper function to wait/sleep
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Helper function to make Spotify API requests
 const spotifyRequest = async (endpoint, token, method = 'GET', data = null) => {
   try {
@@ -151,6 +154,11 @@ router.post('/transfer-liked-songs', async (req, res) => {
         'PUT'
       );
       transferred += batch.length;
+      
+      // FIXED: Add a small delay between batches.
+      // This forces Spotify to register distinct timestamps for each batch,
+      // preserving the order of addition in the user's library.
+      await sleep(100); 
     }
 
     res.json({ success: true, transferred });
@@ -360,4 +368,3 @@ router.post('/delete-followed-artists', async (req, res) => {
 });
 
 module.exports = router;
-

@@ -229,16 +229,34 @@ function App() {
       const likedSongsResponse = await axios.post(`${API_URL}/transfer/liked-songs`, {
         token: sourceAccount.accessToken
       });
-      const likedTracks = likedSongsResponse.data.tracks;
+      
+      // FIXED: Ensure we have the raw tracks with added_at timestamps
+      const likedTracks = likedSongsResponse.data.tracks || [];
 
       // Transfer liked songs
       if (likedTracks.length > 0) {
         setProgress({ step: `Transferring ${likedTracks.length} liked songs...`, percentage: 35 });
-        let trackIds = likedTracks.map(item => item.track.id);
         
-        // If preserve order is enabled, reverse the array so newest songs stay on top
+        let trackIds;
+        
+        // FIXED LOGIC: Explicitly sort by Date Added (Oldest -> Newest)
+        // This ensures they are added to the new account in the exact order they were originally added
         if (preserveOrder) {
-          trackIds = trackIds.reverse();
+          // Filter out invalid tracks first
+          const validTracks = likedTracks.filter(item => item && item.track && item.track.id);
+          
+          // Sort by added_at ASCENDING (Oldest first)
+          // When we add Oldest first, it ends up at the bottom of the list
+          // When we add Newest last, it ends up at the top
+          // This perfectly recreates the timeline
+          validTracks.sort((a, b) => new Date(a.added_at) - new Date(b.added_at));
+          
+          trackIds = validTracks.map(item => item.track.id);
+        } else {
+          // Default behavior (usually Newest first, so we just map)
+          trackIds = likedTracks
+            .filter(item => item && item.track && item.track.id)
+            .map(item => item.track.id);
         }
         
         await axios.post(`${API_URL}/transfer/transfer-liked-songs`, {
@@ -791,4 +809,3 @@ function App() {
 }
 
 export default App;
-
